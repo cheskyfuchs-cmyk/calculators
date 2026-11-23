@@ -55,6 +55,14 @@ button, input, select { font: inherit; color: inherit; }
 .hero { padding: 36px 0 8px; }
 .eyebrow { display: inline-block; background: var(--accent); color: #fff; font-weight: 800; font-size: 13px; letter-spacing: .14em; text-transform: uppercase; padding: 6px 12px; margin-bottom: 14px; }
 .hero h1 { font-family: var(--display); font-weight: 900; font-size: clamp(32px, 5.5vw, 52px); line-height: 1.02; margin: 0 0 18px; letter-spacing: -0.03em; text-wrap: balance; }
+.more-wrap { display: flex; justify-content: center; padding: 26px 0 4px; }
+.more-btn { font-size: 16px; padding: 12px 22px; border-width: 2px; border-color: var(--ink); background: var(--surface); }
+.more-btn .count { background: var(--accent); color: #fff; border-radius: 999px; font-size: 12px; padding: 1px 8px; }
+.more-btn .count:empty { display: none; }
+.more-opts { border-top: 1px solid var(--line); padding-top: 10px; }
+.more-opts summary { cursor: pointer; font-weight: 700; font-size: 14px; color: var(--accent); padding: 4px 0; list-style-position: inside; }
+.more-opts summary span { color: var(--muted); font-weight: 500; }
+.more-opts > .inputs { margin-top: 10px; }
 .hero-meta { margin: 14px 0 0; color: var(--muted); font-size: 14px; font-weight: 600; }
 .hero-row { display: grid; grid-template-columns: 1fr auto; gap: 24px; align-items: start; }
 @media (max-width: 760px) { .hero-row { grid-template-columns: 1fr; } .hero-logo { display: none; } }
@@ -1023,24 +1031,53 @@ if (typeof module !== 'undefined') module.exports = { CALCS, CATS, pmt, amortize
   }
 
   /* ---------- home ---------- */
+  const MAIN = ['payment', 'afford', 'closing', 'rentvsown', 'refi', 'extra', 'points', 'buyingpower', 'dscr'];
+  const ADV = {
+    payment: ['tax', 'ins', 'hoa', 'pmi'],
+    afford: ['term', 'fico', 'dti', 'taxRate', 'ins', 'hoa'],
+    closing: ['lender', 'appraisal', 'attorney', 'title', 'mrt', 'tax', 'ins', 'credit', 'deposit'],
+    rentvsown: ['rentInc', 'taxRate', 'ins', 'maint', 'appr', 'inv'],
+    refi: ['nterm', 'roll', 'cashOut'],
+    extra: ['start', 'extraY', 'lump', 'lumpAt'],
+    points: ['term'],
+    buyingpower: ['term', 'step'],
+    dscr: ['io', 'tax', 'ins', 'hoa', 'target'],
+    rental: ['close', 'vac', 'tax', 'ins', 'hoa', 'maint', 'capex', 'mgmt', 'appr'],
+    armfixed: ['freq', 'cap1', 'capN', 'capL', 'margin'],
+  };
+  let showMore = false;
+  const cardHtml = c => `<a class="card" href="#${c.id}"><b>${esc(c.title)}</b><span>${esc(c.short)}</span><i>Open calculator &rarr;</i></a>`;
   function renderHome() {
     document.title = "Chesky's Mortgage Calculators";
+    const main = MAIN.map(byId).filter(Boolean), rest = CALCS.filter(c => !MAIN.includes(c.id));
     app.innerHTML = `
       <section class="hero"><span class="eyebrow">Mortgage calculators</span>
       <h1>Run the numbers before you make the move.</h1>
       <div class="hero-row"><div class="note">
         <p class="note-hi">Hi, I'm Chesky.</p>
-        <p>Most people walk into the biggest financial decision of their life guessing. Guessing what they can afford. Guessing if now is the right time. Guessing if the deal actually works.</p>
-        <p>I built these calculators so you don't have to guess. Buying your first home, paying down the one you have, or underwriting your next building, start here. Change any number and the results update as you type.</p>
-        <p>When you're ready for a second set of eyes, book 15 minutes with me. You'll walk away with a clear plan, whether we work together or not.</p>
+        <p>Buying, refinancing or investing, start here. Change any number and the results update as you type.</p>
+        <p>Want a second set of eyes? Book 15 minutes with me. You'll walk away with a clear plan, whether we work together or not.</p>
         <div class="note-sig"><img src="${IMG_HEAD}" alt="Chesky Fuchs"><div>Chesky Fuchs<span>Mortgage Advisor, FM Home Loans</span></div></div>
-      </div><img class="hero-logo" src="${IMG_LOGO}" alt="FM Home Loans"></div>
-      <p class="hero-meta">${CALCS.length} free calculators &middot; Every result downloads as a PDF</p></section>
-      ${CATS.map(cat => `<section class="cat"><div class="cat-head"><h2>${esc(cat.title)}</h2><p>${esc(cat.blurb)}</p></div>
-        <div class="grid">${CALCS.filter(c => c.cat === cat.id).map(c => `<a class="card" href="#${c.id}"><b>${esc(c.title)}</b><span>${esc(c.short)}</span><i>Open calculator &rarr;</i></a>`).join('')}</div></section>`).join('')}`;
+      </div><img class="hero-logo" src="${IMG_LOGO}" alt="FM Home Loans"></div></section>
+      <section class="cat"><div class="cat-head"><h2>Pick a calculator</h2><p>Every result downloads as a PDF.</p></div>
+        <div class="grid">${main.map(cardHtml).join('')}</div></section>
+      <div class="more-wrap"><button type="button" class="btn btn-ghost more-btn" id="more-btn" aria-expanded="${showMore}" aria-controls="more">${showMore ? 'Hide' : 'More calculators'} <span class="count">${showMore ? '' : rest.length}</span></button></div>
+      <div id="more"${showMore ? '' : ' hidden'}>
+      ${CATS.map(cat => { const list = rest.filter(c => c.cat === cat.id); return list.length ? `<section class="cat"><div class="cat-head"><h2>${esc(cat.title)}</h2><p>${esc(cat.blurb)}</p></div>
+        <div class="grid">${list.map(cardHtml).join('')}</div></section>` : ''; }).join('')}
+      </div>`;
+    document.getElementById('more-btn').addEventListener('click', () => { showMore = !showMore; const y = window.scrollY; renderHome(); window.scrollTo(0, y); });
   }
 
   /* ---------- calculator ---------- */
+  const openMore = {};
+  function formHtml(c, v) {
+    const adv = ADV[c.id] || [];
+    const basic = c.fields.filter(f => !adv.includes(f.id)), extra = c.fields.filter(f => adv.includes(f.id));
+    let h = basic.map(f => fieldHtml(f, v[f.id])).join('');
+    if (extra.length) h += `<details class="more-opts" id="more-opts"${openMore[c.id] ? ' open' : ''}><summary>More options <span>(${extra.length})</span></summary><div class="inputs">${extra.map(f => fieldHtml(f, v[f.id])).join('')}</div></details>`;
+    return h;
+  }
   function renderCalc(c) {
     document.title = c.title + ' | Chesky Fuchs';
     const v = getVals(c);
@@ -1048,7 +1085,7 @@ if (typeof module !== 'undefined') module.exports = { CALCS, CATS, pmt, amortize
       <div class="crumbs"><a href="#">&larr; All calculators</a></div>
       <div class="calc-head"><h1>${esc(c.title)}</h1><p>${esc(c.short)}</p></div>
       <div class="calc">
-        <section class="panel inputs-panel" aria-label="Inputs"><form class="inputs" id="form" onsubmit="return false">${c.fields.map(f => fieldHtml(f, v[f.id])).join('')}
+        <section class="panel inputs-panel" aria-label="Inputs"><form class="inputs" id="form" onsubmit="return false">${formHtml(c, v)}
           <button type="button" class="btn btn-ghost" id="reset">Reset to example</button></form></section>
         <section class="results" id="results" aria-live="polite"></section>
       </div>`;
@@ -1061,6 +1098,7 @@ if (typeof module !== 'undefined') module.exports = { CALCS, CATS, pmt, amortize
       clearTimeout(t); t = setTimeout(() => drawResults(c), 120);
     });
     form.addEventListener('change', e => { const k = e.target.dataset.k; const f = k && c.fields.find(x => x.id === k); if (f && f.type === 'money') e.target.value = commas(v[k]); });
+    const mo = document.getElementById('more-opts'); if (mo) mo.addEventListener('toggle', () => { openMore[c.id] = mo.open; });
     document.getElementById('reset').addEventListener('click', () => { state[c.id] = defaults(c); renderCalc(c); });
     drawResults(c);
     window.scrollTo(0, 0);
