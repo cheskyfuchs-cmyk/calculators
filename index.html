@@ -136,17 +136,20 @@ tbody tr:last-child td { border-bottom: 0; }
 .cta { margin: 28px 0 8px; background: var(--ink); color: #fff; border-radius: 16px; padding: 22px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 14px; }
 .cta h2 { font-family: var(--display); font-weight: 800; font-size: 22px; margin: 0 0 4px; }
 .cta p { margin: 0; color: #cfcfcf; font-size: 14px; max-width: 52ch; }
-.cta .actions { flex-shrink: 0; }
+.cta .actions { min-width: 0; }
+@media (max-width: 600px) { .cta .actions { width: 100%; flex-direction: column; align-items: stretch; } .cta .btn { width: 100%; } }
 footer { padding: 18px 0 40px; font-size: 12px; color: var(--muted); }
 footer p { margin: 0 0 6px; max-width: 90ch; }
-@media (max-width: 480px) { .wrap { padding: 0 16px; } .bar .btn { padding: 8px 12px; font-size: 13px; } .panel { padding: 16px; } }
+.bar .short { display: none; }
+.brand span { white-space: nowrap; }
+@media (max-width: 480px) { .bar .long { display: none; } .bar .short { display: inline; } .brand span { font-size: 11px; } .wrap { padding: 0 16px; } .bar .btn { padding: 8px 12px; font-size: 13px; } .panel { padding: 16px; } }
 @media (prefers-reduced-motion: reduce) { .card { transition: none; } }
 </style>
 </head>
 <body>
 <header class="bar"><div class="wrap">
   <a class="brand" href="#"><img id="bar-head" alt=""><div><b>Chesky Fuchs</b><span>Mortgage Advisor &middot; NMLS #59111</span></div></a>
-  <a class="btn btn-primary" href="https://calendly.com/chesky/15min" target="_blank" rel="noopener">Book a 15-min call</a>
+  <a class="btn btn-primary" href="https://calendly.com/chesky/15min" target="_blank" rel="noopener"><span class="long">Book a 15-min call</span><span class="short">Book a call</span></a>
 </div></header>
 <main class="wrap" id="app"></main>
 <div class="wrap">
@@ -159,7 +162,6 @@ footer p { margin: 0 0 6px; max-width: 90ch; }
     </div>
   </section>
   <footer>
-    <img id="foot-logo" alt="FM Home Loans" style="width:200px;margin-bottom:10px">
     <p>Chesky Fuchs, Mortgage Advisor, NMLS #59111 &middot; Cell <a href="tel:9177635008">917.763.5008</a> &middot; cfuchs@fmm.com &middot; Licensed in NY, NJ, CT, FL and PA.</p>
     <p>FM Home Loans, LLC, 190 N 10th Street, Brooklyn, NY 11211 &middot; Office (718) 906-6156 &middot; NMLS #2212. Licensed Mortgage Banker, NYS Department of Financial Services. Licensed Residential Mortgage Lender, New Jersey Department of Banking and Insurance. Licensed Mortgage Banker in CT and FL.</p>
     <p>For illustration only. Results are estimates and are not a loan offer, approval or commitment to lend. Rates, payments, fees and eligibility depend on credit, property, occupancy and program guidelines and can change without notice. Equal Housing Opportunity.</p>
@@ -1182,7 +1184,7 @@ if (typeof module !== 'undefined') module.exports = { CALCS, CATS, pmt, amortize
   }
 
   /* ---------- routing ---------- */
-  document.getElementById('bar-head').src = IMG_HEAD; document.getElementById('foot-logo').src = IMG_LOGO;
+  document.getElementById('bar-head').src = IMG_HEAD;
   function route() {
     const id = (location.hash || '').slice(1), c = byId(id);
     if (c) renderCalc(c); else { renderHome(); window.scrollTo(0, 0); }
