@@ -153,6 +153,13 @@ footer p { margin: 0 0 6px; max-width: 90ch; }
 @media (max-width: 480px) { .bar .long { display: none; } .bar .short { display: inline; } .brand span { font-size: 11px; } .wrap { padding: 0 16px; } .bar .btn { padding: 8px 12px; font-size: 13px; } .panel { padding: 16px; } }
 @media (prefers-reduced-motion: reduce) { .card { transition: none; } }
 </style>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-QLMLVWJDB7"></script>
+<script>
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', 'G-QLMLVWJDB7', { send_page_view: false });
+</script>
 </head>
 <body>
 <header class="bar"><div class="wrap">
@@ -1066,7 +1073,7 @@ if (typeof module !== 'undefined') module.exports = { CALCS, CATS, pmt, amortize
       ${CATS.map(cat => { const list = rest.filter(c => c.cat === cat.id); return list.length ? `<section class="cat"><div class="cat-head"><h2>${esc(cat.title)}</h2><p>${esc(cat.blurb)}</p></div>
         <div class="grid">${list.map(cardHtml).join('')}</div></section>` : ''; }).join('')}
       </div>`;
-    document.getElementById('more-btn').addEventListener('click', () => { showMore = !showMore; const y = window.scrollY; renderHome(); window.scrollTo(0, y); });
+    document.getElementById('more-btn').addEventListener('click', () => { showMore = !showMore; if (showMore) track('more_calculators_open'); const y = window.scrollY; renderHome(); window.scrollTo(0, y); });
   }
 
   /* ---------- calculator ---------- */
@@ -1209,6 +1216,7 @@ if (typeof module !== 'undefined') module.exports = { CALCS, CATS, pmt, amortize
         doc.text(doc.splitTextToSize(disc, W - 2 * M - 50), M, H - 36); doc.text(p + ' / ' + pages, W - M, H - 36, { align: 'right' });
       }
       const blob = doc.output('blob'), name = c.title.replace(/[^A-Za-z0-9]+/g, '-').replace(/-+$/, '') + '-Chesky-Fuchs.pdf';
+      track('pdf_download', { calculator: c.id, calculator_name: c.title });
       if (dl) {
         try { await dl.save({ filename: name, data: blob }); st.textContent = 'PDF saved.'; }
         catch (e) { st.textContent = e && e.code === 'declined' ? 'Download canceled.' : 'Downloads are not available in this view.'; }
@@ -1221,11 +1229,15 @@ if (typeof module !== 'undefined') module.exports = { CALCS, CATS, pmt, amortize
     btn.disabled = false;
   }
 
+  /* ---------- analytics (Google Analytics 4) ---------- */
+  function track(name, params) { try { if (typeof gtag === 'function') gtag('event', name, params || {}); } catch (e) {} }
   /* ---------- routing ---------- */
   document.getElementById('bar-head').src = IMG_HEAD;
   function route() {
     const id = (location.hash || '').slice(1), c = byId(id);
     if (c) renderCalc(c); else { renderHome(); window.scrollTo(0, 0); }
+    track('page_view', { page_title: c ? c.title : 'Home', page_location: location.href, page_path: '/' + (c ? '#' + c.id : '') });
+    if (c) track('calculator_open', { calculator: c.id, calculator_name: c.title });
   }
   window.addEventListener('hashchange', route);
   route();
